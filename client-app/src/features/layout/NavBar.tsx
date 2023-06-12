@@ -1,8 +1,11 @@
 import React from 'react'
 import { Button, Container, Menu } from 'semantic-ui-react'
 
+interface NvaBarProps{
+    openForm: () => void;
+}
 
-export default function NavBar() {
+export default function NavBar(props: NvaBarProps) {
 
 
     return (
@@ -16,7 +19,7 @@ export default function NavBar() {
                 </Menu.Item>
                 <Menu.Item name='Activities' />
                 <Menu.Item>
-                    <Button positive content='Create Activity' />
+                    <Button onClick={() => {props.openForm()}} positive content='Create Activity' />
                 </Menu.Item>
             </Container>
         </Menu>
