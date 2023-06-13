@@ -5,6 +5,7 @@ import { Activity } from '../../app/models/activity';
 import NavBar from './NavBar';
 import ActivityDashboard from '../activities/dashboard/ActivityDashboard';
 import {v4 as uuid} from 'uuid';
+import agent from '../../app/api/agent';
 
 function App() {
 
@@ -13,9 +14,14 @@ function App() {
   const [editMode, setEditMode] = useState(false);
 
   useEffect(() => {
-    axios.get<Activity[]>('https://localhost:7292/api/Activities')
-    .then(response => {
-      setActivities(response.data);
+    agent.Activities.list().then(response => {
+      let activites: Activity[] = [];
+      
+      response.forEach(activity => {
+        activity.date = activity.date.split('T')[0];
+        activites.push(activity);
+      })
+      setActivities(response);
     })
   }, [])
 
