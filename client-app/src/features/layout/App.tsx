@@ -6,12 +6,15 @@ import NavBar from './NavBar';
 import ActivityDashboard from '../activities/dashboard/ActivityDashboard';
 import {v4 as uuid} from 'uuid';
 import agent from '../../app/api/agent';
+import LoadingComponent from './LoadingComponent';
 
 function App() {
 
   const [activities, setActivities] = useState<Activity[]>([]);
   const [selectedActivity,setSelectedActivity] = useState<Activity | undefined>(undefined);
   const [editMode, setEditMode] = useState(false);
+  const [loading,setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     agent.Activities.list().then(response => {
@@ -22,6 +25,7 @@ function App() {
         activites.push(activity);
       })
       setActivities(response);
+      setLoading(false);
     })
   }, [])
 
@@ -43,20 +47,39 @@ function App() {
   }
 
   function handleCreateOrEditActivity(activity: Activity) {
-    activity.id
-    ? setActivities([...activities.filter(x=>x.id !== activity.id, activity)])
-    :setActivities([...activities, {...activity, id:uuid() }]);
+    setSubmitting(true);
 
-    setEditMode(false);
-    setSelectedActivity(activity);
+    if(activity.id) {
+      agent.Activities.update(activity).then(() => {
+        setActivities([...activities.filter(x=>x.id !== activity.id, activity)])
+        setSelectedActivity(activity);
+        setEditMode(false);
+        setSubmitting(false);
+      })
+    }
+    else{
+      activity.id = uuid()
+      agent.Activities.create(activity).then(() => {
+        setActivities([...activities, {...activity, id: activity.id}]);
+      })
+      setSelectedActivity(activity);
+        setEditMode(false);
+        setSubmitting(false);
+    }
   }
 
   function handleDeleteActivity(id: string) {
-
+    setSubmitting(true);
+    agent.Activities.delete(id).then(() => {
+      setActivities([...activities.filter(x=>x.id !== id)])
+    })
     setActivities([...activities.filter(x=>x.id !== id)])
 
   }
 
+  if(loading){
+    return <LoadingComponent inverted={false} content={''} />
+  }
   return (
     <Fragment>
         <NavBar openForm = {handleFormOpen}/>
@@ -71,6 +94,7 @@ function App() {
               closeForm={handleFormClose}
               createOrEdit={handleCreateOrEditActivity}
               deleteActivity = {handleDeleteActivity}
+              submitting = {submitting}
               />
           </Container>
       </Fragment> 
